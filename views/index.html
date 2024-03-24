@@ -1,0 +1,171 @@
+<html>
+  <head>
+    <title>Register</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-gray-100 p-5">
+    <section class="max-w-md p-6 bg-white rounded shadow">
+      <h1 class="text-2xl font-bold mb-4">Form</h1>
+      <form id="registerForm">
+        <div class="mb-4">
+          <label for="username" class="block mb-2 font-bold">UserName</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded"
+          />
+        </div>
+        <div class="mb-4">
+          <label for="phone" class="block mb-2 font-bold">Phone Number</label>
+          <input
+            type="text"
+            id="phone"
+            name="phone"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded"
+          />
+        </div>
+        <div class="mb-4">
+          <label for="email" class="block mb-2 font-bold">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded"
+          />
+        </div>
+        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded">
+          Submit
+        </button>
+      </form>
+    </section>
+    <section class="mt-10">
+      <ul>
+        {% for user in users %}
+        <li class="px-4 py-2">
+          * {{ user.id }} - {{ user.username }} - {{user.phone}} - {{ user.email
+          }}
+          <span>
+            <button
+              class="border-2 border-gray-500 rounded-md ml-5 px-4"
+              onclick="getUser('{{ user.id }}')"
+            >
+              Edit
+            </button>
+            <button
+              class="border-2 border-gray-500 rounded-md ml-2 px-4"
+              onclick="deleteUser('{{ user.id }}')"
+            >
+              delete
+            </button>
+          </span>
+        </li>
+
+        {% endfor %}
+      </ul>
+    </section>
+  </body>
+  <script>
+    let userId;
+
+    // get user from db hookup
+    function getUser(id) {
+      fetch(`/api/user/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          userId = data.id;
+          document.getElementById("username").value = data.username;
+          document.getElementById("phone").value = data.phone;
+          document.getElementById("email").value = data.email;
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }
+
+    // delete user from db hookup
+
+    function deleteUser(id) {
+      fetch(`/api/user/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => response.json())
+        .then(async (data) => {
+          await alert(data.message); // Handle the response from the server
+          window.location.href = "/";
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }
+
+    // register form action
+    const registerForm = document.getElementById("registerForm");
+    registerForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const formData = {
+        username: document.getElementById("username").value,
+        phone: document.getElementById("phone").value,
+        email: document.getElementById("email").value,
+      };
+      if (userId) {
+        return updateUser(userId, formData);
+      } else {
+        return createUser(formData);
+      }
+    });
+
+    //update user api hookup
+    function updateUser(userId, formData) {
+      fetch(`/api/update-user/${userId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      })
+        .then((response) => response.json())
+        .then(async (data) => {
+          await alert(data.message);
+          window.location.href = "/";
+        })
+        .catch((error) => {
+          // Handle any errors
+          alert(error);
+        });
+    }
+
+    //create user api hookup
+    function createUser(formData) {
+      fetch("/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      })
+        .then((response) => response.json())
+        .then(async (data) => {
+          await alert(data.message);
+          window.location.href = "/";
+        })
+        .catch((error) => {
+          alert(error);
+        });
+    }
+  </script>
+</html>
